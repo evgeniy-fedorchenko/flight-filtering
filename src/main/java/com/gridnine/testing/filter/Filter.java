@@ -2,7 +2,8 @@ package com.gridnine.testing.filter;
 
 import com.gridnine.testing.flight.Flight;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 
 public interface Filter {
 
@@ -13,17 +14,18 @@ public interface Filter {
      * исключая их из результирующего потока в том случае, если метод {@link Filter#test(Flight)} вернул {@code false}
      *
      * @param flights исходный список объектов {@link Flight}, который необходимо отфильтровать
-     * @return Список объектов {@link Flight}, отфильтрованный на основании предиката,
-     * ссылающегося на метод {@link Filter#test(Flight)}
+     * @return Список объектов {@link Flight}, отфильтрованный на основании предиката, ссылающегося на метод
+     * {@link Filter#test(Flight)}. Если переданный аргумент равен {@code null}, то будет возвращена пустая коллекция
      */
-    default List<Flight> doFilter(List<Flight> flights) {
-        return flights.stream().filter(this::test).toList();
+    default Collection<Flight> doFilter(Collection<Flight> flights) {
+        return flights == null ? Collections.emptyList() : flights.stream().filter(this::test).toList();
     }
 
     /**
-     * Метод, использующийся для фильтрации элементов в {@link Filter#doFilter(List)}.
-     * Реализация этого метода должна возвращать {@code true} в том случае, если
-     * объект  необходимо оставить и передать в результирующий поток
+     * Метод, использующийся для фильтрации элементов в {@link Filter#doFilter(Collection)}.
+     * Реализация этого метода должна возвращать {@code true} в том случае, если объект
+     * необходимо оставить и  передать в результирующий поток. Реализации этого метода сами
+     * несут ответственность за проверку  переданного им объекта {@code flight} на равенство с {@code null}
      *
      * @param flight объект, для которого требуется принять решение на
      *               основании условия, заданного конкретной реализацией
@@ -36,6 +38,7 @@ public interface Filter {
     /**
      * Метод возвращает имя фильтра.
      * Если не переопределено, то возвращает имя класса фильтра (без пакета), на котором вызывается
+     *
      * @return имя фильтра
      */
     default String getName() {

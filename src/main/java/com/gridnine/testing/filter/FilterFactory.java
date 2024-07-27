@@ -36,7 +36,7 @@ public class FilterFactory {
 
     /**
      * Создает новый экземпляр фабрики фильтров с указанным пакетом для сканирования.
-     * Этот конструктор позволяет указать пакет, в котором будут сканироваться фильтры.
+     * Этот конструктор позволяет указать пакет, в котором будет происходить поиск фильтров.
      * Переданный пакет должен быть валидным, существующим пакетом, доступным для чтения.
      * Путь должен начинаться от директории "src" (включительно), вложенные директории
      * должны быть разделены символом {@code /} (косая черта), номер в UTF-8: 0x2F
@@ -59,7 +59,6 @@ public class FilterFactory {
         } catch (InvalidPathException | SecurityException ex) {
             throw new IllegalArgumentException("Package " + packageToScan + " cannot be used. Ex: ", ex);
         }
-
     }
 
     /**
@@ -103,7 +102,7 @@ public class FilterFactory {
      */
     public void registerManually(Filter... filters) {
         Arrays.stream(filters)
-                .peek(filter -> Objects.requireNonNull(filter, "Filters cannot be null"))
+                .peek(filter -> Objects.requireNonNull(filter, "Filter cannot be null"))
                 .filter(filter -> !filtersMap.containsKey(filter.getName()))
                 .forEach(filter -> filtersMap.put(filter.getName(), filter));
     }
@@ -111,17 +110,18 @@ public class FilterFactory {
     /**
      * Метод регистрирует фильтры вручную по их именам.
      * Этот метод позволяет зарегистрировать один или несколько фильтров по их строковым именам.
-     * Для каждого указанного имени метод проверяет, что фильтр с таким именем еще не был
-     * зарегистрирован, дубликаты игнорируются Если фильтр с таким именем не был найден, метод пытается создать
-     * экземпляр фильтра с помощью метода {@link #getValidFilter(String)}.
+     * Фильтры могут находиться в любом доступном месте программы. Для каждого указанного имени метод
+     * проверяет, что фильтр с таким именем еще не был зарегистрирован, дубликаты игнорируются. Если
+     * фильтр с указанными именем существует и может быть создан с помощью конструктора, то такой фильтр
+     * будет зарегистрирован.
      *
-     * @param names Массив строковых имен фильтров, которые нужно зарегистрировать
-     * @throws NullPointerException     Если любое переданное имя фильтра равно null.
-     * @throws IllegalArgumentException Если фильтр с указанным именем не найден.
+     * @param filterNames Массив строковых имен фильтров, которые нужно зарегистрировать
+     * @throws NullPointerException     Если любое переданное имя фильтра равно null
+     * @throws IllegalArgumentException Если один из фильтров не был найден или не может быть создан
      */
-    public void registerManuallyByName(String... names) {
-        Arrays.stream(names)
-                .peek(name -> Objects.requireNonNull(name, "Filters cannot be null"))
+    public void registerManuallyByName(String... filterNames) {
+        Arrays.stream(filterNames)
+                .peek(name -> Objects.requireNonNull(name, "Filter's name cannot be null"))
                 .filter(name -> !filtersMap.containsKey(name))
                 .forEach(name -> filtersMap.put(name, getValidFilter(name)));
     }
@@ -139,7 +139,6 @@ public class FilterFactory {
 
         Optional.ofNullable(this.getClass().getClassLoader().getResource(packageToScan.replace(".", "/")))
                 .map(url -> new File(url.getFile()))
-                .filter(file -> file.exists() && file.isDirectory())
                 .ifPresent(directory ->
                         Arrays.stream(directory.listFiles()).forEach(file ->
 
@@ -167,7 +166,7 @@ public class FilterFactory {
                     && aClass.getDeclaredConstructor().newInstance() instanceof Filter filter) {
                 return Optional.of(filter);
             }
-        } catch (ReflectiveOperationException _) { }   // Не удалось найти конструктор и создать объект класса aClass
+        } catch (ReflectiveOperationException _) { }   // Не удалось найти конструктор и создать экземпляр фильтра
         return Optional.empty();
     }
 

@@ -16,8 +16,10 @@ public class EarlyArrivalSegmentFilter implements Filter {
     @Override
     public boolean test(Flight flight) {
 
-        return flight != null && flight.getSegments().stream()
-                .allMatch(segment -> segment.getDepartureDate().isBefore(segment.getArrivalDate()));
+        return flight != null
+                && !flight.getSegments().isEmpty()
+                && flight.getSegments().stream()
+                        .allMatch(segment -> segment.getDepartureDate().isBefore(segment.getArrivalDate()));
     }
 
 }

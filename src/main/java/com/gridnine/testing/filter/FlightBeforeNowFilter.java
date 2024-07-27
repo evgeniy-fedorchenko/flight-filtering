@@ -17,9 +17,8 @@ public class FlightBeforeNowFilter implements Filter {
      */
     @Override
     public boolean test(Flight flight) {
-        if (flight == null || flight.getSegments().isEmpty()) {
-            return false;
-        }
-        return flight.getSegments().getFirst().getDepartureDate().isAfter(LocalDateTime.now());
+        return flight != null
+                && !flight.getSegments().isEmpty()
+                && flight.getSegments().getFirst().getDepartureDate().isAfter(LocalDateTime.now());
     }
 }

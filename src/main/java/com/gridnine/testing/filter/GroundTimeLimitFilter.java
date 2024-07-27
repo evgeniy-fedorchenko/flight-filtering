@@ -28,14 +28,15 @@ public class GroundTimeLimitFilter implements Filter {
      */
     @Override
     public boolean test(Flight flight) {
+        if (flight == null) {
+            return false;
+        }
         List<Segment> segments = flight.getSegments();
 
         return IntStream.range(0, segments.size() - 1)
-                .mapToObj(idx -> Duration.between(
-                        segments.get(idx).getArrivalDate(),
-                        segments.get(idx + 1).getDepartureDate()
-
-                )).reduce(Duration.ZERO, Duration::plus)
+                .mapToObj(idx ->
+                        Duration.between(segments.get(idx).getArrivalDate(), segments.get(idx + 1).getDepartureDate()))
+                .reduce(Duration.ZERO, Duration::plus)
                 .compareTo(Duration.of(AMOUNT, UNIT)) < 0;
     }
 }

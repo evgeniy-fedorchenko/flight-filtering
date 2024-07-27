@@ -1,21 +1,20 @@
 package com.gridnine.testing.filter;
 
 import java.io.File;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Фабрика для управления и создания экземпляров интерфейса {@link  Filter}.
+ * Фабрика для поиска, управления и создания экземпляров интерфейса {@link Filter}.
  * Этот класс предоставляет функциональность для автоматического обнаружения и
  * регистрации реализаций {@code Filter} из указанного (или дефолтного) пакета
  */
 public class FilterFactory {
 
     /**
-     * Карта представляет собой контейнер зарегистрированных фильтров этой фабрики. Все автоматически
+     * Карта представляет собой контейнер зарегистрированных фильтров экземпляра фабрики. Все автоматически
      * (или вручную) зарегистрированные фильтры помещаются в эту карту
      */
     private final Map<String, Filter> filtersMap = new HashMap<>();
@@ -42,8 +41,8 @@ public class FilterFactory {
      * Путь должен начинаться от директории "src" (включительно), вложенные директории
      * должны быть разделены символом {@code /} (косая черта), номер в UTF-8: 0x2F
      *
-     * @param packageToScan пакет, в котором будут сканироваться фильтры
-     * @throws IllegalArgumentException если этот покет невозможно использовать
+     * @param packageToScan целевой пакет, в котором необходимо найти фильтры
+     * @throws IllegalArgumentException если этот пакет невозможно использовать
      */
     public FilterFactory(String packageToScan) {
         if (packageToScan == null || packageToScan.isBlank()) {
@@ -56,9 +55,11 @@ public class FilterFactory {
                 this.packageToScan = packageToScan;
                 return;
             }
-        } catch (InvalidPathException | SecurityException _) { }
+            throw new IllegalArgumentException("Package " + packageToScan + " cannot be used. Check its existence, readability, and that it is a DIRECTORY");
+        } catch (InvalidPathException | SecurityException ex) {
+            throw new IllegalArgumentException("Package " + packageToScan + " cannot be used. Ex: ", ex);
+        }
 
-        throw new IllegalArgumentException("Package " + packageToScan + " cannot be used");
     }
 
     /**
@@ -69,19 +70,16 @@ public class FilterFactory {
      *
      * @param name имя фильтра, экземпляр которого нужно получить
      * @return экземпляр {@code Filter}
-     * @throws NullPointerException если под запрошенным именем не зарегистрирован фильтр
      * @see Filter#getName()
      */
     public Filter getByName(String name) {
-        Filter filter = filtersMap.get(name);
-        Objects.requireNonNull(filter, "Filter is not found: " + name + ". Please register this filter.");
-        return filter;
+        return filtersMap.get(name);
     }
 
     /**
      * Возвращает список зарегистрированных объектов, чьи классы реализуют интерфейс {@link Filter}.
      * Если список фильтров пуст, метод автоматически попытается зарегистрировать все фильтры из пакета,
-     * переданного в конструктор при создании фабрики, если ни один фильтр не был обнаружен, то возвращается
+     * переданного в конструктор при создании фабрики. Если ни один фильтр не был обнаружен, то возвращается
      * пустой список. Регистрация фильтров осуществляется путем сканирования файлов классов в пакете и создания
      * экземпляров классов, реализующих интерфейс {@link Filter}.
      *
@@ -101,7 +99,7 @@ public class FilterFactory {
      * Если переданный фильтр уже зарегистрирован в контейнере, то он будет проигнорирован
      *
      * @param filters фильтры, которые необходимо зарегистрировать
-     * @throws NullPointerException если один из фильтров равен null
+     * @throws NullPointerException если любой из переданных фильтров равен null
      */
     public void registerManually(Filter... filters) {
         Arrays.stream(filters)
@@ -111,14 +109,14 @@ public class FilterFactory {
     }
 
     /**
-     * Регистрирует фильтры вручную по их именам.
+     * Метод регистрирует фильтры вручную по их именам.
      * Этот метод позволяет зарегистрировать один или несколько фильтров по их строковым именам.
      * Для каждого указанного имени метод проверяет, что фильтр с таким именем еще не был
-     * зарегистрирован. Если фильтр с таким именем не был найден, метод пытается создать
+     * зарегистрирован, дубликаты игнорируются Если фильтр с таким именем не был найден, метод пытается создать
      * экземпляр фильтра с помощью метода {@link #getValidFilter(String)}.
      *
      * @param names Массив строковых имен фильтров, которые нужно зарегистрировать
-     * @throws NullPointerException     Если переданное имя фильтра равно null.
+     * @throws NullPointerException     Если любое переданное имя фильтра равно null.
      * @throws IllegalArgumentException Если фильтр с указанным именем не найден.
      */
     public void registerManuallyByName(String... names) {
@@ -129,7 +127,7 @@ public class FilterFactory {
     }
 
     /**
-     * Регистрирует фильтры, найденные в пакете {@link FilterFactory#packageToScan}.
+     * Метод регистрирует фильтры, обнаруженные в пакете {@link FilterFactory#packageToScan}.
      * Метод сканирует указанный пакет на наличие классов, реализующих интерфейс {@link Filter}.
      * Для каждого найденного класса будет предпринята попытка создать экземпляр фильтра. В случае
      * неудачи, метод просто переходит к следующему классу. Успешно созданные фильтры регистрируются
@@ -179,7 +177,7 @@ public class FilterFactory {
             String className = packageToScan + "." + file.getName().replace(".class", "");
             return Optional.of(Class.forName(className));
 
-        } catch (ClassNotFoundException ex) {   // Не удалось найти класс в пакете packageToScan в указанном file
+        } catch (ClassNotFoundException _) {   // Не удалось найти класс в пакете packageToScan в указанном file
             return Optional.empty();
         }
     }

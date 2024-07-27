@@ -24,7 +24,7 @@ public class GroundTimeLimitFilter implements Filter {
      *
      * @param flight Объект, представляющий проверяемый полёт
      * @return {@code true} если переданный аргумент {@code flight} не имеет длительных простоев.<br>
-     * {@code false} в противном случае или если переданный аргумент равен {@code null}
+     *         {@code false} в противном случае или если переданный аргумент равен {@code null}
      */
     @Override
     public boolean test(Flight flight) {

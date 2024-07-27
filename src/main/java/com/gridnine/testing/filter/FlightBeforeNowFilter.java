@@ -13,7 +13,7 @@ public class FlightBeforeNowFilter implements Filter {
      *
      * @param flight Объект, представляющий проверяемый полёт
      * @return {@code true}, если вылет уже состоялся<br>
-     * {@code false}, в противном случае, если он равен {@code null} или если у полёта нет сегментов
+     *         {@code false}, в противном случае, если он равен {@code null} или если у полёта нет сегментов
      */
     @Override
     public boolean test(Flight flight) {
